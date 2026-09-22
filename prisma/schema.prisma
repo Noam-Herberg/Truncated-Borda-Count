@@ -1,0 +1,47 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "sqlite"; url = env("DATABASE_URL") }
+
+model Election {
+  id String @id @default(cuid())
+  title String
+  description String?
+  opensAt DateTime @default(now())
+  closesAt DateTime
+  closed Boolean @default(false)
+  candidates Candidate[]
+  participations Participation[]
+  ballots Ballot[]
+  createdAt DateTime @default(now())
+}
+model Candidate {
+  id String @id @default(cuid())
+  name String
+  electionId String
+  election Election @relation(fields:[electionId], references:[id], onDelete:Cascade)
+  ballotChoices BallotChoice[]
+}
+model Participation {
+  id String @id @default(cuid())
+  electionId String
+  voterHash String
+  votedAt DateTime @default(now())
+  election Election @relation(fields:[electionId], references:[id], onDelete:Cascade)
+  @@unique([electionId,voterHash])
+}
+model Ballot {
+  id String @id @default(cuid())
+  electionId String
+  createdAt DateTime @default(now())
+  election Election @relation(fields:[electionId], references:[id], onDelete:Cascade)
+  choices BallotChoice[]
+}
+model BallotChoice {
+  id String @id @default(cuid())
+  ballotId String
+  candidateId String
+  rank Int
+  ballot Ballot @relation(fields:[ballotId], references:[id], onDelete:Cascade)
+  candidate Candidate @relation(fields:[candidateId], references:[id], onDelete:Cascade)
+  @@unique([ballotId,rank])
+  @@unique([ballotId,candidateId])
+}
